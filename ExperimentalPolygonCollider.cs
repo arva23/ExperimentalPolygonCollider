@@ -412,7 +412,7 @@ namespace ExperimentalPolygonCollider
                         else
                         {
 
-                            if (debugCollider) texture.SetPixel(x, y, Color.green);
+                            //if (debugCollider) texture.SetPixel(x, y, Color.green);
                         }
 
                         prevWasTransparent = true;
@@ -483,7 +483,24 @@ namespace ExperimentalPolygonCollider
 
         private void MaskRegions() {
 
-            // TODO
+            // it masks detected object regions in order to
+            //  debug collider algorithm
+
+            int sizeOfBoundaryVertices = boundaryVertices.Count - 1;
+            for (int i = 0; i < sizeOfBoundaryVertices; ++i)
+            {
+
+                if (i % 2 == 0)
+                {
+
+                    for (int x = (int)boundaryVertices[i].x; x <= (int)boundaryVertices[i + 1].x; ++x)
+                        texture.SetPixel(x, (int)boundaryVertices[i].y, Color.cyan);
+                }
+            }
+
+            Debug.Log("edge vertices " + sizeOfBoundaryVertices + 1);
+
+            texture.Apply();
         }
 
 
