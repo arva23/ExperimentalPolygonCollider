@@ -253,7 +253,97 @@ namespace ExperimentalPolygonCollider
 
         private void PreprocessSprite() {
 
-            // TODO
+            spriteRenderer.sprite = recentSprite;
+            Graphics.CopyTexture(spriteRenderer.sprite.texture, texture);
+
+            if (texture.format != TextureFormat.ARGB32
+                && texture.format != TextureFormat.BGRA32
+                && texture.format != TextureFormat.RGBA32
+                && texture.format != TextureFormat.RGB24
+                && texture.format != TextureFormat.Alpha8
+                && texture.format != TextureFormat.RGBAFloat
+                && texture.format != TextureFormat.RGBAHalf
+                && texture.format != TextureFormat.RGB565)
+            {
+
+                Debug.LogWarning("Experimental polygon collider works with non-compressed texture " +
+                    "in ARGB32, BGRA32, RGB24, RGBA4444, RGB565, RGBAFloat or RGBAHalf format in " +
+                    "order to operate in nominal condition.");
+            }
+
+
+            // execute dilation on texture in order to fulfill the condition of 
+            // https://www.cs.auckland.ac.nz/courses/compsci773s1c/lectures/ImageProcessing-html/topic4.htm
+
+            Debug.Log("w : " + width + "h : " + height);
+
+
+            int kerOffset = erosionRadius / 2;
+
+            if (width >= erosionRadius && height >= erosionRadius)
+            {
+
+                Color c;
+
+
+                for (int e = 0; e < numOfErosionIterations; ++e)
+                {
+
+                    for (int x = kerOffset; x < width - kerOffset; x += erosionRadius)
+                    {
+
+                        for (int y = kerOffset; y < height - kerOffset; y += erosionRadius)
+                        {
+
+                            c = texture.GetPixel(x, y);
+
+                            if (c.a <= alphaThreshold)
+                                for (int kx = -kerOffset; kx <= kerOffset; ++kx)
+                                    for (int ky = -kerOffset; ky <= kerOffset; ++ky)
+                                        texture.SetPixel(x + kx, y + ky, c);
+                        }
+                    }
+                }
+            }
+            else
+            {
+
+                Debug.LogError("Selected erosion radius is too large to use on texture.");
+            }
+
+            kerOffset = dilationRadius / 2;
+
+            if (width >= dilationRadius && height >= dilationRadius)
+            {
+
+                Color c;
+
+                for (int e = 0; e < numOfDilationIterations; ++e)
+                {
+
+                    for (int x = kerOffset; x < width - kerOffset; x += dilationRadius)
+                    {
+
+                        for (int y = kerOffset; y < height - kerOffset; y += dilationRadius)
+                        {
+
+                            c = texture.GetPixel(x, y);
+
+                            if (c.a > alphaThreshold)
+                                for (int kx = -kerOffset; kx <= kerOffset; ++kx)
+                                    for (int ky = -kerOffset; ky <= kerOffset; ++ky)
+                                        texture.SetPixel(x + kx, y + ky, c);
+                        }
+                    }
+                }
+            }
+            else
+            {
+
+                Debug.LogError("Selected erosion radius is too large to use on texture.");
+            }
+
+            texture.Apply();
         }
 
 
