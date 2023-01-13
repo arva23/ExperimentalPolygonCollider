@@ -349,7 +349,134 @@ namespace ExperimentalPolygonCollider
 
         private bool DetectSpriteRegions() {
 
-            // TODO
+            // a raycasting algorithm for detection of points that represents
+            //  the boundaries of an object excluding alpha pixels
+
+
+            // linearized container of pixels from 2D container
+
+            pixels = texture.GetPixels(xOffset, yOffset, width, height, 0);
+
+            int sizeOfPixels = pixels.Length;
+            Debug.Log("no pixels " + sizeOfPixels);
+
+
+            if (sizeOfPixels > 1)
+            {
+
+                int x = 0;
+                int y = 0;
+
+                bool prevWasTransparent = true;
+
+                boundaryVertices = new List<Vector2>();
+
+                // horizontal traversal
+                for (int i = 0; i < sizeOfPixels; ++i)
+                {
+
+                    x = i % width;
+                    y = i / width;
+
+                    //if (i % width == 0) prevWasTransparent = true;
+
+                    if (pixels[i].a > alphaThreshold)
+                    {
+
+
+                        if (prevWasTransparent)
+                        {
+
+                            // entry point of object
+                            boundaryVertices.Add(new Vector2(x, y));
+                            if (debugCollider) texture.SetPixel(x, y, Color.red);
+                        }
+                        else
+                        {
+
+                            if (debugCollider) texture.SetPixel(x, y, Color.blue);
+                        }
+
+                        prevWasTransparent = false;
+                    }
+                    else
+                    {
+
+                        if (!prevWasTransparent)
+                        {
+
+                            // exit point of object
+                            boundaryVertices.Add(new Vector2((i - 1) % width, (i - 1) / width));
+                            if (debugCollider) texture.SetPixel((i - 1) % width, (i - 1) / width, Color.red);
+                        }
+                        else
+                        {
+
+                            if (debugCollider) texture.SetPixel(x, y, Color.green);
+                        }
+
+                        prevWasTransparent = true;
+
+                    }
+                }
+
+                // vertical traversal
+                boundaryVerticesYTrav = new List<Vector2>();
+                boundaryVerticesLineLengths = new List<int>();
+                boundaryVerticesLineLengths.Add(0);
+                prevWasTransparent = true;
+
+
+                for (x = 0; x < width; ++x)
+                {
+
+                    prevWasTransparent = true;
+
+                    for (y = 0; y < height; ++y)
+                    {
+
+                        if (pixels[y * width + x].a > alphaThreshold)
+                        {
+
+                            if (prevWasTransparent)
+                            {
+                                // entry point of object
+                                if (!boundaryVertices.Contains(new Vector2(x, y)))
+                                    boundaryVertices.Add(new Vector2(x, y));
+
+                                boundaryVerticesYTrav.Add(new Vector2(x, y));
+                            }
+
+                            prevWasTransparent = false;
+                        }
+                        else
+                        {
+
+                            if (!prevWasTransparent)
+                            {
+                                if (!boundaryVertices.Contains(new Vector2(x, (y - 1) % height)))
+                                    boundaryVertices.Add(new Vector2(x, (y - 1)));
+
+                                boundaryVerticesYTrav.Add(new Vector2(x, y));
+                            }
+
+                            prevWasTransparent = true;
+                        }
+                    }
+
+                    boundaryVerticesLineLengths.Add(boundaryVertices.Count);
+                }
+
+                Debug.Log("Boundary vertices size: " + boundaryVerticesYTrav.Count);
+            }
+            else
+            {
+
+                return true;
+            }
+
+            texture.Apply();
+
             return false;
         }
 
